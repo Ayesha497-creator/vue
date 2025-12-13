@@ -12,7 +12,7 @@ pipeline {
     }
 
     stages {
-        stage('Deploy') {
+        stage('Deploy & Build') {
             steps {
                 script {
                     def PROJECT_DIR = "/var/www/html/development/${params.PROJECT}"
@@ -25,17 +25,14 @@ pipeline {
                                 git pull origin ${BRANCH_NAME} &&
 
                                 if [ -f package.json ]; then
-                                    echo "Node.js project detected. Installing dependencies..."
+                                    echo "Node.js project detected. Installing dependencies and building..."
                                     npm install
-
-                                    # Set environment for build
-                                    export VUE_APP_BASE_URL="/${params.PROJECT}/" &&
-                                    echo "Building Vue project with publicPath=${VUE_APP_BASE_URL}..."
+                                    export VUE_APP_BASE_URL="/${params.PROJECT}/"
                                     npm run build
                                 fi
 
                                 if [ -f composer.json ]; then
-                                    echo "Laravel project detected. Installing dependencies..."
+                                    echo "Laravel project detected. Installing dependencies and migrating..."
                                     composer install --no-dev --optimize-autoloader
                                     php artisan migrate --force
                                 fi
