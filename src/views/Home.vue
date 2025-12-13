@@ -1,25 +1,14 @@
-<script>
-import ZoneTweet from "@/components/ZoneTweet";
-import Tweet from "@/components/Tweet";
-
-export default {
-  name: "Home",
-  components: {
-    ZoneTweet,
-    Tweet,
-  },
-};
-</script>
-
 <template>
   <div id="home-page" class="home">
     <div class="title">
       <h3>Home</h3>
       <img src="@/assets/img/starsicon.png" alt="" class="icon" />
     </div>
+
     <div class="greeting">
       <h2>hi ayesha</h2>
     </div>
+
     <div class="notice-card" data-test-id="home-notice">
       <p class="headline">🎨 Colorful Update!</p>
       <p class="body">
@@ -27,6 +16,16 @@ export default {
         user experience.
       </p>
     </div>
+
+    <!-- Software Grid Start -->
+    <div class="software-grid">
+      <div class="software-card" v-for="(software, index) in softwareList" :key="index">
+        <h4>{{ software.name }}</h4>
+        <p>{{ software.description }}</p>
+      </div>
+    </div>
+    <!-- Software Grid End -->
+
     <ZoneTweet />
     <Tweet />
     <Tweet />
@@ -56,10 +55,31 @@ export default {
   </div>
 </template>
 
+<script>
+import ZoneTweet from "@/components/ZoneTweet";
+import Tweet from "@/components/Tweet";
+
+export default {
+  name: "Home",
+  components: {
+    ZoneTweet,
+    Tweet,
+  },
+  data() {
+    return {
+      softwareList: [
+        { name: "🌐 Web Development", description: "Vue, React, Angular - Build stunning web apps." },
+        { name: "🤖 AI & Machine Learning", description: "Python, TensorFlow, PyTorch - Create intelligent systems." },
+        { name: "📱 Mobile Apps", description: "React Native, Flutter - Build cross-platform mobile apps." },
+        { name: "⚡ Productivity Tools", description: "VS Code, Git, GitHub - Enhance your workflow." },
+      ],
+    };
+  },
+};
+</script>
+
 <style scoped lang="scss">
 .home {
-  // max-width: 600px;
-  // min-width: 598px;
   border: 1px solid rgba(0, 0, 0, 0.08);
 
   .title {
@@ -69,7 +89,6 @@ export default {
     h3 {
       font-weight: 900;
       font-size: 23px;
-      line-height: 22.27px;
       color: #1d9bf0;
       cursor: pointer;
     }
@@ -110,6 +129,38 @@ export default {
       margin: 0;
     }
   }
+
+  /* Software Grid Styles */
+  .software-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+    margin: 1rem;
+
+    .software-card {
+      background: linear-gradient(135deg, #89f7fe, #66a6ff);
+      padding: 1rem;
+      border-radius: 12px;
+      box-shadow: 0 6px 15px rgba(102, 166, 255, 0.3);
+      color: #fff;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+
+      h4 {
+        margin: 0 0 0.5rem 0;
+        font-size: 18px;
+        font-weight: 900;
+      }
+
+      p {
+        margin: 0;
+        font-size: 14px;
+      }
+
+      &:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 12px 25px rgba(102, 166, 255, 0.5);
+      }
+    }
+  }
 }
 </style>
-
