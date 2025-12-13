@@ -1,33 +1,30 @@
 pipeline {
     agent any
 
-    parameters {
-        choice(name: 'PROJECT', choices: ['vue', 'laravel', 'next'], description: 'Select project to deploy')
-    }
-
     environment {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
         BRANCH_NAME = "development"
+        PROJECT = "vue" // yaha default project set kar do, automatic ke liye
     }
 
     stages {
         stage('Deploy & Build') {
             steps {
                 script {
-                    def PROJECT_DIR = "/var/www/html/development/${params.PROJECT}"
+                    def PROJECT_DIR = "/var/www/html/development/${env.PROJECT}"
 
                     sshagent(['jenkins-deploy-key']) {
                         sh """
                             ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                                 cd ${PROJECT_DIR} &&
-                                echo "Deploying ${params.PROJECT} branch ${BRANCH_NAME}..." &&
+                                echo "Deploying ${env.PROJECT} branch ${BRANCH_NAME}..." &&
                                 git pull origin ${BRANCH_NAME} &&
 
                                 if [ -f package.json ]; then
                                     echo "Node.js project detected. Installing dependencies and building..."
                                     npm install
-                                    export VUE_APP_BASE_URL="/${params.PROJECT}/"
+                                    export VUE_APP_BASE_URL="/${env.PROJECT}/"
                                     npm run build
                                 fi
 
@@ -37,7 +34,7 @@ pipeline {
                                     php artisan migrate --force
                                 fi
 
-                                echo "Deployment completed for ${params.PROJECT}!"
+                                echo "Deployment completed for ${env.PROJECT}!"
                             '
                         """
                     }
@@ -52,3 +49,4 @@ pipeline {
         }
     }
 }
+
