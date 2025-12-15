@@ -5,7 +5,7 @@ pipeline {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
         PROJECT = "vue"
-        // SLACK_WEBHOOK = "https://hooks.slack.com/services/..."
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK') // Jenkins credential ID use
     }
 
     stages {
@@ -39,10 +39,23 @@ pipeline {
             }
         }
     }
+    post {
+    success {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"✅ ${PROJECT} → ${ENV_NAME} deployed successfully!"}' \
+        $SLACK_WEBHOOK
+        """
+    }
+    failure {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"❌ ${PROJECT} → ${ENV_NAME} deployment failed!"}' \
+        $SLACK_WEBHOOK
+        """
+    }
+}
 
-    // Optional post block
-    // post {
-    //     success { ... }
-    //     failure { ... }
-    // }
+
+    
 }
