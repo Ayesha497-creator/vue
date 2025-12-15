@@ -72,6 +72,10 @@ export default {
         { name: "🤖 AI & Machine Learning", description: "Python, TensorFlow, PyTorch - Create intelligent systems." },
         { name: "📱 Mobile Apps", description: "React Native, Flutter - Build cross-platform mobile apps." },
         { name: "⚡ Productivity Tools", description: "VS Code, Git, GitHub - Enhance your workflow." },
+         { name: "🌐 Web Development", description: "Vue, React, Angular - Build stunning web apps." },
+        { name: "🤖 AI & Machine Learning", description: "Python, TensorFlow, PyTorch - Create intelligent systems." },
+        { name: "📱 Mobile Apps", description: "React Native, Flutter - Build cross-platform mobile apps." },
+        { name: "⚡ Productivity Tools", description: "VS Code, Git, GitHub - Enhance your workflow." },
       ],
     };
   },
