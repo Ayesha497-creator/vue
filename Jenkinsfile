@@ -23,12 +23,11 @@ pipeline {
                             cd ${PROJECT_DIR}
                             echo "Deploying ${PROJECT} → ${ENV_NAME}"
 
-                            git pull origin ${ENV_NAME}
-
-                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                              
-                            npm run build --mode test
-                            fi
+                                git pull origin ${ENV_NAME}
+                    if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                        npm install
+                        npm run build -- --mode ${ENV_NAME}  # correct
+                    fi
 
                             if [ "${PROJECT}" = "laravel" ]; then
                                 php artisan optimize
