@@ -33,7 +33,7 @@ pipeline {
 
                             if [ "${PROJECT}" = "laravel" ]; then
                                 php artisan optimize
-                                echo "Laravel build completed"
+                              
                             fi
                         '
                         """
