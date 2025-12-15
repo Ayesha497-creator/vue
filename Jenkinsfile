@@ -5,7 +5,7 @@ pipeline {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
         PROJECT = "vue"
-        // SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
+        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK') // Jenkins credential ID use
     }
 
     stages {
@@ -23,15 +23,14 @@ pipeline {
                             cd ${PROJECT_DIR}
                             echo "Deploying ${PROJECT} → ${ENV_NAME}"
 
-                                git pull origin ${ENV_NAME}
-                    if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                        npm install
-                        npm run build -- --mode ${ENV_NAME}  # correct
-                    fi
+                            git pull origin ${ENV_NAME}
+
+                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                                npm run build -- --mode ${ENV_NAME}
+                            fi
 
                             if [ "${PROJECT}" = "laravel" ]; then
                                 php artisan optimize
-                                echo "Laravel build completed"
                             fi
                         '
                         """
@@ -40,25 +39,23 @@ pipeline {
             }
         }
     }
-    // post {
-    //     success {
-    //         sh '''
-    //         curl -s -X POST -H "Content-type: application/json" \
-    //         --data '{
-    //             "text": "✅ Deployment SUCCESS\nProject: '"${PROJECT}"'\nBranch: '"${ENV_NAME}"'"
-    //         }' \
-    //         '"${SLACK_WEBHOOK}"' || true
-    //         '''
-    //     }
+    post {
+    success {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"✅ ${PROJECT} → ${ENV_NAME} deployed successfully!"}' \
+        $SLACK_WEBHOOK
+        """
+    }
+    failure {
+        sh """
+        curl -X POST -H 'Content-type: application/json' \
+        --data '{"text":"❌ ${PROJECT} → ${ENV_NAME} deployment failed!"}' \
+        $SLACK_WEBHOOK
+        """
+    }
+}
 
-    //     failure {
-    //         sh '''
-    //         curl -s -X POST -H "Content-type: application/json" \
-    //         --data '{
-    //             "text": "❌ Deployment FAILED\nProject: '"${PROJECT}"'\nBranch: '"${ENV_NAME}"'"
-    //         }' \
-    //         '"${SLACK_WEBHOOK}"' || true
-    //         '''
-    //     }
-    // }
+
+    
 }
