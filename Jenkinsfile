@@ -27,12 +27,12 @@ pipeline {
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
                                 npm install
-                                npm run build --mode ${ENV_NAME}
+                               npm run build -- --mode ${ENV_NAME}
                             fi
 
                             if [ "${PROJECT}" = "laravel" ]; then
-                                composer install --no-dev --optimize-autoloader
-                                php artisan migrate --force
+                                php artisan optimize
+                                echo "Laravel build completed"
                             fi
                         '
                         """
