@@ -24,7 +24,7 @@ pipeline {
 
                             if [ -f package.json ]; then
                                 echo "Node project (Vue / Next) detected"
-                                npm install
+                                rm -rf dist
                                 npm run build
                             fi
 
@@ -40,22 +40,25 @@ pipeline {
             }
         }
     }
-
     post {
-        success {
-            sh """
-            curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"✅ Deployment SUCCESS\\nProject: ${PROJECT}\\nBranch: ${BRANCH_NAME}"}' \
-            ${SLACK_WEBHOOK}
-            """
-        }
+    success {
+        sh '''
+        curl -s -X POST -H "Content-type: application/json" \
+        --data '{
+            "text": "✅ Deployment SUCCESS\nProject: '"${PROJECT}"'\nBranch: '"${BRANCH_NAME}"'"
+        }' \
+        '"${SLACK_WEBHOOK}"' || true
+        '''
+    }
 
-        failure {
-            sh """
-            curl -X POST -H 'Content-type: application/json' \
-            --data '{"text":"❌ Deployment FAILED\\nProject: ${PROJECT}\\nBranch: ${BRANCH_NAME}"}' \
-            ${SLACK_WEBHOOK}
-            """
-        }
+    failure {
+        sh '''
+        curl -s -X POST -H "Content-type: application/json" \
+        --data '{
+            "text": "❌ Deployment FAILED\nProject: '"${PROJECT}"'\nBranch: '"${BRANCH_NAME}"'"
+        }' \
+        '"${SLACK_WEBHOOK}"' || true
+        '''
     }
 }
+
