@@ -27,7 +27,7 @@ pipeline {
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
                               
-                               npm run build 
+                            npm run build --mode test
                             fi
 
                             if [ "${PROJECT}" = "laravel" ]; then
