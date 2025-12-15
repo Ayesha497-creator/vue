@@ -24,7 +24,7 @@ pipeline {
                             git pull origin ${ENV_NAME}
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                npm install
+                        
                                 npm run build
                             fi
 
