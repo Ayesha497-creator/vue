@@ -5,6 +5,7 @@ pipeline {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
         PROJECT = "vue"
+        // SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
     }
 
     stages {
@@ -24,7 +25,7 @@ pipeline {
                             git pull origin ${ENV_NAME}
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                npm install
+                          
                                 npm run build
                             fi
 
@@ -39,4 +40,26 @@ pipeline {
             }
         }
     }
+
+    // post {
+    //     success {
+    //         sh '''
+    //         curl -s -X POST -H "Content-type: application/json" \
+    //         --data '{
+    //             "text": "✅ Deployment SUCCESS\nProject: '"${PROJECT}"'\nBranch: '"${ENV_NAME}"'"
+    //         }' \
+    //         '"${SLACK_WEBHOOK}"' || true
+    //         '''
+    //     }
+
+    //     failure {
+    //         sh '''
+    //         curl -s -X POST -H "Content-type: application/json" \
+    //         --data '{
+    //             "text": "❌ Deployment FAILED\nProject: '"${PROJECT}"'\nBranch: '"${ENV_NAME}"'"
+    //         }' \
+    //         '"${SLACK_WEBHOOK}"' || true
+    //         '''
+    //     }
+    // }
 }
