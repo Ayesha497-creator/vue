@@ -12,6 +12,7 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
+                    // Branch name as environment
                     def ENV_NAME = env.BRANCH_NAME
                     def PROJECT_DIR = "/var/www/html/${ENV_NAME}/${PROJECT}"
 
@@ -25,12 +26,12 @@ pipeline {
                             git pull origin ${ENV_NAME}
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                          
-                                npm run build
+                                npm install
+                                npm run build --mode ${ENV_NAME}
                             fi
 
                             if [ "${PROJECT}" = "laravel" ]; then
-                                composer install --no-dev
+                                composer install --no-dev --optimize-autoloader
                                 php artisan migrate --force
                             fi
                         '
@@ -40,7 +41,6 @@ pipeline {
             }
         }
     }
-
     // post {
     //     success {
     //         sh '''
