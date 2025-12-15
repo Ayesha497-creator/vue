@@ -25,10 +25,11 @@ pipeline {
 
                             git pull origin ${ENV_NAME}
 
-                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                              
-                               npm run build -- --mode ${ENV_NAME}
+                           if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                               
+                                npm run build
                             fi
+
 
                             if [ "${PROJECT}" = "laravel" ]; then
                                 php artisan optimize
