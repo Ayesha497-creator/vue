@@ -5,7 +5,8 @@ pipeline {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
         BRANCH_NAME = "development"
-        PROJECT = "vue" // yaha default project set kar do, automatic ke liye
+        PROJECT = "vue"
+        SLACK_WEBHOOK = "https://hooks.slack.com/services/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"
     }
 
     stages {
@@ -16,26 +17,23 @@ pipeline {
 
                     sshagent(['jenkins-deploy-key']) {
                         sh """
-                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                                cd ${PROJECT_DIR} &&
-                                echo "Deploying ${env.PROJECT} branch ${BRANCH_NAME}..." &&
-                                git pull origin ${BRANCH_NAME} &&
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                            cd ${PROJECT_DIR} &&
+                            echo "Deploying ${PROJECT}..." &&
+                            git pull origin ${BRANCH_NAME}
 
-                                if [ -f package.json ]; then
-                                    echo "Node.js project detected. Installing dependencies and building..."
-                                    npm install
-                                    export VUE_APP_BASE_URL="/${env.PROJECT}/"
-                                    npm run build
-                                fi
+                            if [ -f package.json ]; then
+                                echo "Node project (Vue / Next) detected"
+                                npm install
+                                npm run build
+                            fi
 
-                                if [ -f composer.json ]; then
-                                    echo "Laravel project detected. Installing dependencies and migrating..."
-                                    composer install --no-dev --optimize-autoloader
-                                    php artisan migrate --force
-                                fi
-
-                                echo "Deployment completed for ${env.PROJECT}!"
-                            '
+                            if [ -f composer.json ]; then
+                                echo "Laravel project detected"
+                                composer install --no-dev --optimize-autoloader
+                                php artisan migrate --force
+                            fi
+                        '
                         """
                     }
                 }
@@ -44,9 +42,20 @@ pipeline {
     }
 
     post {
+        success {
+            sh """
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"✅ Deployment SUCCESS\\nProject: ${PROJECT}\\nBranch: ${BRANCH_NAME}"}' \
+            ${SLACK_WEBHOOK}
+            """
+        }
+
         failure {
-            echo "Deployment failed!"
+            sh """
+            curl -X POST -H 'Content-type: application/json' \
+            --data '{"text":"❌ Deployment FAILED\\nProject: ${PROJECT}\\nBranch: ${BRANCH_NAME}"}' \
+            ${SLACK_WEBHOOK}
+            """
         }
     }
 }
-
