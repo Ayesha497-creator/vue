@@ -10,6 +10,16 @@ pipeline {
         ENV_NAME = "${BRANCH_NAME}"          
        // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
+    stages {
+        // --- Nayi Stage: SonarQube ---
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube-Server') {
+                    // Docker automatically project ki root se properties file utha lega
+                    sh "docker run --rm -v \$(pwd):/usr/src sonarsource/sonar-scanner-cli"
+                }
+            }
+        }
 
     stages {
         stage('Deploy') {
