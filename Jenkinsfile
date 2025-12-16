@@ -11,13 +11,14 @@ pipeline {
 
     stages {
         // --- Stage 1: SonarQube Scan ---
-        stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('SonarQube-Server') {
-                    sh "docker run --rm -v \$(pwd):/usr/src sonarsource/sonar-scanner-cli"
-                }
-            }
+       stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('SonarQube-Server') {
+            // Hum -e use kar rahe hain taake Jenkins ka Token Docker ke andar chala jaye
+            sh "docker run --rm -e SONAR_TOKEN=\$SONAR_AUTH_TOKEN -v \$(pwd):/usr/src sonarsource/sonar-scanner-cli"
         }
+    }
+}
 
         // --- Stage 2: Deployment ---
         stage('Deploy') {
