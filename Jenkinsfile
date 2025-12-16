@@ -1,12 +1,14 @@
+
+
 pipeline {
     agent any
 
     environment {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
-        PROJECT = "vue"
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
-        ENV_NAME = "${BRANCH_NAME}"
+        PROJECT = "Next"
+        ENV_NAME = "${BRANCH_NAME}"          
+       // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
 
     stages {
@@ -23,14 +25,19 @@ pipeline {
                             echo "Deploying ${PROJECT} → ${ENV_NAME}"
 
                             git pull origin ${ENV_NAME}
-                        if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                            npm run build
-                            [ "${PROJECT}" = "next" ] && pm2 start npm --name "Next-${ENV_NAME}" -- start && pm2 save
-                        elif [ "${PROJECT}" = "laravel" ]; then
-                            php artisan optimize
+
+                     if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                        npm run build
+                    if [ "${PROJECT}" = "next" ]; then
+                    pm2 restart "Next-${ENV_NAME}"
+                    pm2 save
+
+                    fi
+                    elif [ "${PROJECT}" = "laravel" ]; then
+                    php artisan optimize
                         fi
 
-                         '
+                        '
                         """
                     }
                 }
@@ -38,6 +45,7 @@ pipeline {
         }
     }
 
+    /*
     post {
         success {
             sh """
@@ -54,4 +62,5 @@ pipeline {
             """
         }
     }
+    */
 }
