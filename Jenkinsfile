@@ -23,17 +23,14 @@ pipeline {
                             echo "Deploying ${PROJECT} → ${ENV_NAME}"
 
                             git pull origin ${ENV_NAME}
+                        if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                            npm run build
+                            [ "${PROJECT}" = "next" ] && pm2 start npm --name "Next-${ENV_NAME}" -- start && pm2 save
+                        elif [ "${PROJECT}" = "laravel" ]; then
+                            php artisan optimize
+                        fi
 
-                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                npm run build -- --mode ${ENV_NAME}
-                                 pm2 start npm --name "Next-${ENV_NAME}" -- start
-                              pm2 save
-                            fi
-
-                            if [ "${PROJECT}" = "laravel" ]; then
-                                php artisan optimize
-                            fi
-                        '
+                         '
                         """
                     }
                 }
