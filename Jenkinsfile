@@ -1,13 +1,26 @@
+
+
+
 pipeline {
     agent any
 
     environment {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
-        PROJECT = "vue"
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
-        ENV_NAME = "${BRANCH_NAME}"
+        PROJECT = "Next"
+        ENV_NAME = "${BRANCH_NAME}"          
+       // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
+    stages {
+        // --- Nayi Stage: SonarQube ---
+        stage('SonarQube Analysis') {
+            steps {
+                withSonarQubeEnv('SonarQube-Server') {
+                    // Docker automatically project ki root se properties file utha lega
+                    sh "docker run --rm -v \$(pwd):/usr/src sonarsource/sonar-scanner-cli"
+                }
+            }
+        }
 
     stages {
         stage('Deploy') {
@@ -24,13 +37,17 @@ pipeline {
 
                             git pull origin ${ENV_NAME}
 
-                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                npm run build -- --mode ${ENV_NAME}
-                            fi
+                     if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
+                      npm run build -- --mode ${ENV_NAME}
+                    if [ "${PROJECT}" = "next" ]; then
+                    pm2 restart "Next-${ENV_NAME}"
+                    pm2 save
 
-                            if [ "${PROJECT}" = "laravel" ]; then
-                                php artisan optimize
-                            fi
+                    fi
+                    elif [ "${PROJECT}" = "laravel" ]; then
+                    php artisan optimize
+                        fi
+
                         '
                         """
                     }
@@ -39,6 +56,7 @@ pipeline {
         }
     }
 
+    /*
     post {
         success {
             sh """
@@ -55,4 +73,5 @@ pipeline {
             """
         }
     }
+    */
 }
