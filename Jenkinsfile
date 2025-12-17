@@ -17,7 +17,9 @@ pipeline {
                 withSonarQubeEnv('SonarQube-Server') {
                     sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
                         -Dsonar.projectKey=vue-project \
-                        -Dsonar.sources=."
+                    -Dsonar.sources=. \
+                    -Dsonar.qualitygate.wait=true
+                    """
                 }
             }
         }
