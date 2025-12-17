@@ -9,13 +9,22 @@ pipeline {
         // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
 
-    stages {
-        // --- Stage 1: SonarQube Scan ---
-       stage('SonarQube Analysis') {
+ stage('SonarQube Analysis') {
     steps {
+        // withSonarQubeEnv khud hi URL aur Token handle kar lega
         withSonarQubeEnv('SonarQube-Server') {
-            // Hum -e use kar rahe hain taake Jenkins ka Token Docker ke andar chala jaye
-            sh "docker run --rm -e SONAR_TOKEN=\$SONAR_AUTH_TOKEN -v \$(pwd):/usr/src sonarsource/sonar-scanner-cli"
+           
+            sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
+                -Dsonar.projectKey=vue-project \
+                -Dsonar.sources=."
+        }
+    }
+}
+   stage("Quality Gate") {
+    steps {
+       
+        timeout(time: 5, unit: 'MINUTES') {
+            waitForQualityGate abortPipeline: true
         }
     }
 }
