@@ -15,7 +15,7 @@ pipeline {
             steps {
                 // withSonarQubeEnv khud hi URL aur Token handle kar lega
                 withSonarQubeEnv('SonarQube-Server') {
-                    sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
+                    sh  """${tool 'sonar-scanner'}/bin/sonar-scanner \
                         -Dsonar.projectKey=vue-project \
                     -Dsonar.sources=. \
                     -Dsonar.qualitygate.wait=true
