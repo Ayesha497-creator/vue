@@ -11,7 +11,7 @@ pipeline {
 
  stage('SonarQube Analysis') {
     steps {
-        // withSonarQubeEnv khud hi URL aur Token handle kar lega
+      
         withSonarQubeEnv('SonarQube-Server') {
            
             sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
