@@ -9,7 +9,7 @@ pipeline {
         // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
 
-    stages {  // <--- Ye missing tha, isay add kiya hai taake syntax sahi ho jaye
+    stages {  
 
         stage('SonarQube Analysis') {
             steps {
