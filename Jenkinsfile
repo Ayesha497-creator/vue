@@ -13,7 +13,6 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                // withSonarQubeEnv khud hi URL aur Token handle kar lega
                 withSonarQubeEnv('SonarQube-Server') {
                     sh  """${tool 'sonar-scanner'}/bin/sonar-scanner \
                         -Dsonar.projectKey=vue-project \
@@ -32,8 +31,12 @@ pipeline {
             }
         }
 
-        // --- Stage 2: Deployment ---
         stage('Deploy') {
+            when {
+                expression { 
+                    return currentBuild.result == null || currentBuild.result == 'SUCCESS' 
+                }
+            }
             steps {
                 script {
                     def PROJECT_DIR = "/var/www/html/${ENV_NAME}/${PROJECT}"
@@ -43,7 +46,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             set -e
                             cd ${PROJECT_DIR}
-                            echo "Deploying ${PROJECT} → ${ENV_NAME}"
+                            echo "Gate Passed! Starting Deployment for ${PROJECT}..."
 
                             git pull origin ${ENV_NAME}
 
@@ -62,7 +65,6 @@ pipeline {
                 }
             }
         }
-    } // <--- Stages block yahan band ho raha hai
 
     /*
     post {
