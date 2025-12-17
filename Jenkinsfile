@@ -9,25 +9,26 @@ pipeline {
         // SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
 
- stage('SonarQube Analysis') {
-    steps {
-      
-        withSonarQubeEnv('SonarQube-Server') {
-           
-            sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
-                -Dsonar.projectKey=vue-project \
-                -Dsonar.sources=."
+    stages {  // <--- Ye missing tha, isay add kiya hai taake syntax sahi ho jaye
+
+        stage('SonarQube Analysis') {
+            steps {
+                // withSonarQubeEnv khud hi URL aur Token handle kar lega
+                withSonarQubeEnv('SonarQube-Server') {
+                    sh "${tool 'sonar-scanner'}/bin/sonar-scanner \
+                        -Dsonar.projectKey=vue-project \
+                        -Dsonar.sources=."
+                }
+            }
         }
-    }
-}
-   stage("Quality Gate") {
-    steps {
-       
-        timeout(time: 5, unit: 'MINUTES') {
-            waitForQualityGate abortPipeline: true
+
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 5, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
         }
-    }
-}
 
         // --- Stage 2: Deployment ---
         stage('Deploy') {
@@ -59,7 +60,7 @@ pipeline {
                 }
             }
         }
-    }
+    } // <--- Stages block yahan band ho raha hai
 
     /*
     post {
