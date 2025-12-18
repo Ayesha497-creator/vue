@@ -63,7 +63,7 @@ pipeline {
 
                             if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
                               
-                                npm run build 
+                                npm run build -- --mode ${ENV_NAME}
                                 if [ "${PROJECT}" = "next" ]; then
                                     pm2 restart "Next-${ENV_NAME}" 
                                     pm2 save
