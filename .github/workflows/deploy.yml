@@ -60,9 +60,7 @@ jobs:
       - name: Notify
         if: always()
         run: |
-          # Variable set karein
-          STATUS="${{ job.status == 'success' && 'SUCCESS ' || 'FAILED ' }}"
-          
+          STATUS="${{ job.status == 'success' && 'SUCCESS ✅' || 'FAILED ❌' }}"          
           if [[ "${{ job.status }}" == "success" ]]; then
             MSG="Deployment successful!"
           else
