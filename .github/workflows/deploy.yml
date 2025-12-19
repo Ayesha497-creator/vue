@@ -60,15 +60,19 @@ jobs:
       - name: Notify
         if: always()
         run: |
-          STATUS="${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}"
+          # Variable set karein
+          STATUS="${{ job.status == 'success' && 'SUCCESS ' || 'FAILED ' }}"
           
           if [[ "${{ job.status }}" == "success" ]]; then
-            MSG="Deployment successful! ✅"
+            MSG="Deployment successful!"
           else
             [[ "${{ steps.qg.outcome }}" == "failure" ]] && ERR="Quality Gate" || ERR="Build/Deploy"
-            MSG="Failed at: $ERR step ❌"
+            MSG="Failed at: $ERR step"
           fi
 
+          # Slack payload build karein (is tarah formatting error nahi aata)
+          PAYLOAD="{\"text\": \"*[$STATUS]*\n*Project:* ${{ env.PROJECT }}\n*Branch:* ${{ github.ref_name }}\n*Status:* $MSG\"}"
+
           curl -X POST -H 'Content-type: application/json' \
-          --data "{\"text\":\"*[$STATUS]* \n*Project:* ${{ env.PROJECT }} \n*Branch:* ${{ github.ref_name }} \n*Status:* $MSG\"}" \
+          --data "$PAYLOAD" \
           "${{ secrets.SLACK_WEBHOOK }}"
