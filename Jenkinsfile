@@ -4,27 +4,22 @@ pipeline {
     environment {
         REMOTE_USER = "ubuntu"
         REMOTE_HOST = "13.61.68.173"
-        PROJECT = "vue"
-        ENV_NAME = "${BRANCH_NAME}"         
+        PROJECT     = "vue"
+        ENV_NAME    = "${BRANCH_NAME}"         
         TEST_BRANCH = "test" 
         SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
     }
 
     stages {
-        stage('SonarQube Analysis') {
+        stage('Quality Gatekeeper (Scan Test)') {
             steps {
-                script { 
-                    env.FAILURE_MSG = STAGE_NAME 
+                script {
+                    env.FAILURE_MSG = "Test Branch Scan"
                     
-                    // 1. Pehle Test Branch ko fetch aur checkout karo (Scan ke liye)
-                    sh "git fetch origin ${TEST_BRANCH}"
-                    sh "git checkout -f ${TEST_BRANCH}"
-                    sh "git reset --hard origin/${TEST_BRANCH}"
+                    // 1. Automatically test branch checkout karo scan ke liye
+                    sh "git fetch origin ${TEST_BRANCH} && git checkout -f ${TEST_BRANCH} && git reset --hard origin/${TEST_BRANCH}"
                     
-                    // Debug: Check karein ke commit ID 4b5a439... hi hai na
-                    sh "git log -1 --format='%H'"
-
-                    // 2. Scan chalao (Ye TEST_BRANCH ka code scan karega)
+                    // 2. Scan chalao
                     withSonarQubeEnv('SonarQube-Server') {
                         sh """
                         export NODE_OPTIONS="--max-old-space-size=2048"
@@ -38,50 +33,42 @@ pipeline {
             }
         }
 
-        stage("Quality Gate") {
+        stage("Verification & Decision") {
             steps {
                 script {
-                    env.FAILURE_MSG = STAGE_NAME 
-                    // Yahan hum TEST_BRANCH par hi rukay hue hain jab tak result nahi aata
+                    env.FAILURE_MSG = "Quality Gate Decision"
+                    
+                    // 3. Faisla (Decision): Agar status OK nahi hai, toh ye stage fail ho jayegi aur deploy nahi chalega
                     timeout(time: 1, unit: 'HOURS') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "Quality Gate Failed on Test Branch: ${qg.status}"
+                            error "STOPPING DEPLOYMENT: Test branch status is ${qg.status}. Please fix bugs first."
                         }
                     }
                     
-                    // AGAR PASS HUA: Toh ab wapis Current Branch (e.g. development) par switch karo
-                    echo "Quality Gate Passed! Switching back to ${ENV_NAME} for deployment."
-                    sh "git checkout -f ${ENV_NAME}"
-                    sh "git pull origin ${ENV_NAME}"
+                    echo "Quality Gate PASSED. Proceeding to deploy ${ENV_NAME}..."
                 }
             }
         }
 
         stage('Deploy') {
-            // Ye tabhi chalega jab Quality Gate 'OK' ho chuka hoga aur branch switch ho gayi hogi
-            when { expression { return currentBuild.result == null || currentBuild.result == 'SUCCESS' } }
+            // Yeh stage sirf tabhi chalegi agar upar wala 'Verification' pass ho gaya
             steps {
                 script {
-                    env.FAILURE_MSG = STAGE_NAME
+                    env.FAILURE_MSG = "Deployment on ${ENV_NAME}"
                     def PROJECT_DIR = "/var/www/html/${ENV_NAME}/${PROJECT}"
+                    
+                    // Wapis asli branch par switch karo deployment ke liye
+                    sh "git checkout -f ${ENV_NAME} && git pull origin ${ENV_NAME}"
+                    
                     sshagent(['jenkins-deploy-key']) {
                         sh """
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             set -e
                             cd ${PROJECT_DIR}
-                            git fetch origin ${ENV_NAME}
-                            git reset --hard origin/${ENV_NAME}
-
-                            if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                npm run build -- --mode ${ENV_NAME}
-                                if [ "${PROJECT}" = "next" ]; then
-                                    pm2 restart "Next-${ENV_NAME}" 
-                                    pm2 save
-                                fi
-                            elif [ "${PROJECT}" = "laravel" ]; then
-                                php artisan optimize
-                            fi
+                            git fetch origin ${ENV_NAME} && git reset --hard origin/${ENV_NAME}
+                            npm run build -- --mode ${ENV_NAME}
+                            [ "${PROJECT}" = "next" ] && pm2 restart "Next-${ENV_NAME}" && pm2 save
                         '
                         """
                     }
@@ -93,14 +80,13 @@ pipeline {
     post {
         failure {
             script {
-                // Agar fail ho jaye toh bhi safety ke liye development par wapis le aao
-                sh "git checkout -f ${ENV_NAME}" || echo "Already on branch or failed to switch"
-                def finalStage = env.FAILURE_MSG ?: "Initial Setup"
-                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* → *${ENV_NAME}* Failed at: *${finalStage}*\"}' ${SLACK_WEBHOOK}"
+                // Safety: Fail hone par wapis original branch context set kar do
+                sh "git checkout -f ${ENV_NAME}" || echo "Already on branch"
+                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* → *${ENV_NAME}* Deployment Blocked! Failed at: *${env.FAILURE_MSG}*\"}' ${SLACK_WEBHOOK}"
             }
         }
         success {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* → *${ENV_NAME}* Deployed Successfully! 🚀\"}' $SLACK_WEBHOOK"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* → *${ENV_NAME}* Passed Quality Gate & Deployed! 🚀\"}' $SLACK_WEBHOOK"
         }
     }
 }
