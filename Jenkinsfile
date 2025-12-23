@@ -67,10 +67,8 @@ pipeline {
     post {
         failure {
             script {
-                // Yahan logic check karega ke failure kahan hua
                 def failureType = "Deployment Stage"
                 
-                // Agar test branch thi aur build abort hui QA stage par
                 if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.rawBuild.getLog(100).contains("QUALITY_GATE_FAILED")) {
                     failureType = "Quality Check (QA)"
                 }
