@@ -21,7 +21,7 @@ pipeline {
                     timeout(time: 10, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
                         if (qg.status != 'OK') {
-                            error "STOPPING: Quality Gate failed with status: ${qg.status}"
+                            error "QUALITY_GATE_FAILED" 
                         }
                     }
                 }
@@ -32,7 +32,6 @@ pipeline {
             when {
                 beforeAgent true
                 expression {
-                   
                     return (BRANCH_NAME != TEST_BRANCH) || (currentBuild.result == null || currentBuild.result == 'SUCCESS')
                 }
             }
@@ -67,10 +66,18 @@ pipeline {
 
     post {
         failure {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}): Failed!\"}' ${SLACK_WEBHOOK}"
+            script {
+                def failureType = "Deployment Stage"
+                
+                if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.rawBuild.getLog(100).contains("QUALITY_GATE_FAILED")) {
+                    failureType = "Quality Check (QA)"
+                }
+
+                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}) - *${failureType} Failed!*\"}' ${SLACK_WEBHOOK}"
+            }
         }
         success {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}): Success!\"}' $SLACK_WEBHOOK"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}) - Deployed Successfully!\"}' $SLACK_WEBHOOK"
         }
     }
 }
