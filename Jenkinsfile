@@ -8,65 +8,60 @@ pipeline {
         ENV_NAME    = "${BRANCH_NAME}"         
         TEST_BRANCH = "test" 
         SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
+        QG_STATUS   = "NONE"
     }
 
     stages {
-        stage('Quality check') {
+        stage('Quality Check (QA)') {
+            when { branch "${TEST_BRANCH}" }
             steps {
                 script {
-                    env.FAILURE_MSG = "Quality Gatekeeper"
-                    sh "git checkout -f ${TEST_BRANCH} && git pull origin ${TEST_BRANCH}"
-                    
+                    echo "QA Scan starting for ${TEST_BRANCH}..."
                     withSonarQubeEnv('SonarQube-Server') {
                         sh """
-                        export NODE_OPTIONS="--max-old-space-size=2048"
-                        ${tool 'sonar-scanner'}/bin/sonar-scanner \
-                            -Dsonar.projectKey=${PROJECT}-project \
-                            -Dsonar.sources=. \
-                            -Dsonar.exclusions=**/node_modules/**,**/vendor/**
+                            ${tool 'sonar-scanner'}/bin/sonar-scanner \
+                                -Dsonar.projectKey=${PROJECT}-project \
+                                -Dsonar.sources=. \
+                                -Dsonar.exclusions=**/node_modules/**,**/vendor/**
                         """
                     }
-
                     timeout(time: 10, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "STOPPING DEPLOYMENT: Quality Gate failed on ${TEST_BRANCH}"
+                        env.QG_STATUS = qg.status
+                        if (env.QG_STATUS != 'OK') {
+                            error "STOPPING: QA Status is ${env.QG_STATUS}"
                         }
                     }
                 }
             }
         }
 
-        stage('Deploy Current Branch') {
-            when { 
-                expression { return currentBuild.result == null || currentBuild.result == 'SUCCESS' }
+        stage('Deploy') {
+            when {
+                expression {
+                    return (ENV_NAME != TEST_BRANCH) || (ENV_NAME == TEST_BRANCH && env.QG_STATUS == 'OK')
+                }
             }
             steps {
                 script {
-                    env.FAILURE_MSG = "Deployment on ${ENV_NAME}"
-                    def PROJECT_DIR = "/var/www/html/${ENV_NAME}/${PROJECT}"
-                    
                     sshagent(['jenkins-deploy-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                            set -e
-                            cd ${PROJECT_DIR}
-                            
-                            git pull origin ${ENV_NAME}
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                                set -e
+                                cd /var/www/html/${ENV_NAME}/${PROJECT}
+                                git pull origin ${ENV_NAME}
 
-                            case "${PROJECT}" in
-                                "vue"|"next")
+                                if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
                                     npm run build
-                                    if [ "${PROJECT}" = "next" ]; then
-                                        pm2 restart "Next-${ENV_NAME}" 
-                                        pm2 save
-                                    fi
-                                    ;;
-                                "laravel")
+                                    # Yahan humne PROCESS_NAME hata diya, direct project name use ho raha hai
+                                    pm2 restart "${PROJECT}-${ENV_NAME}" || pm2 start npm --name "${PROJECT}-${ENV_NAME}" -- start
+                                    pm2 save
+                                fi
+
+                                if [ "${PROJECT}" = "laravel" ]; then
                                     php artisan optimize
-                                    ;;
-                            esac
-                        '
+                                fi
+                            '
                         """
                     }
                 }
@@ -76,10 +71,10 @@ pipeline {
 
     post {
         failure {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* Deployment Blocked! Test Branch Quality Failed.\"}' ${SLACK_WEBHOOK}"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}): Failed!\"}' ${SLACK_WEBHOOK}"
         }
         success {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}) Deployed! (Verified via ${TEST_BRANCH}) 🚀\"}' $SLACK_WEBHOOK"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}): Success!\"}' $SLACK_WEBHOOK"
         }
     }
 }
