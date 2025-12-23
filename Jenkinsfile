@@ -11,32 +11,36 @@ pipeline {
     }
 
     stages {
-        stage('Quality Check (QA)') {
+        stage('Quality Check ') {
             when { branch "${TEST_BRANCH}" }
             steps {
                 script {
-                    withSonarQubeEnv('SonarQube-Server') {
-                        sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
-                    }
-                    timeout(time: 10, unit: 'MINUTES') {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "QUALITY_GATE_FAILED" 
+                   
+                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
+                        withSonarQubeEnv('SonarQube-Server') {
+                            sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
+                        }
+                        timeout(time: 10, unit: 'MINUTES') {
+                            def qg = waitForQualityGate()
+                            if (qg.status != 'OK') {
+                                error "QUALITY_GATE_FAILED" 
+                            }
                         }
                     }
                 }
             }
         }
 
-       stage('Deploy') {
-    when {
-        expression {
-            if (env.BRANCH_NAME == env.TEST_BRANCH) {
-                return currentBuild.result == null || currentBuild.result == 'SUCCESS'
+        stage('Deploy') {
+            when {
+                expression {
+                   
+                    if (env.BRANCH_NAME == env.TEST_BRANCH) {
+                        return currentBuild.result == 'SUCCESS' 
+                    }
+                    return true
+                }
             }
-            return true
-        }
-    }
             steps {
                 script {
                     sshagent(['jenkins-deploy-key']) {
@@ -69,17 +73,19 @@ pipeline {
     post {
         failure {
             script {
+                
                 def failureType = "Deployment Stage"
                 
-                if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.rawBuild.getLog(100).contains("QUALITY_GATE_FAILED")) {
-                    failureType = "Quality Check (QA)"
+                
+                if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.result == 'FAILURE') {
+                     failureType = "Quality Check "
                 }
 
                 sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}) - *${failureType} Failed!*\"}' ${SLACK_WEBHOOK}"
             }
         }
         success {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}) - Deployed Successfully!\"}' $SLACK_WEBHOOK"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}) - Deployed Successfully!\"}' ${SLACK_WEBHOOK}"
         }
     }
 }
