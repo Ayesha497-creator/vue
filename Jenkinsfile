@@ -8,7 +8,6 @@ pipeline {
         ENV_NAME    = "${BRANCH_NAME}"         
         TEST_BRANCH = "test" 
         SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
-        QG_STATUS   = "NONE"
     }
 
     stages {
@@ -16,20 +15,13 @@ pipeline {
             when { branch "${TEST_BRANCH}" }
             steps {
                 script {
-                    echo "QA Scan starting for ${TEST_BRANCH}..."
                     withSonarQubeEnv('SonarQube-Server') {
-                        sh """
-                            ${tool 'sonar-scanner'}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${PROJECT}-project \
-                                -Dsonar.sources=. \
-                                -Dsonar.exclusions=**/node_modules/**,**/vendor/**
-                        """
+                        sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
                     }
                     timeout(time: 10, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
-                        env.QG_STATUS = qg.status
-                        if (env.QG_STATUS != 'OK') {
-                            error "STOPPING: QA Status is ${env.QG_STATUS}"
+                        if (qg.status != 'OK') {
+                            error "STOPPING: Quality Gate failed with status: ${qg.status}"
                         }
                     }
                 }
@@ -38,8 +30,10 @@ pipeline {
 
         stage('Deploy') {
             when {
+                beforeAgent true
                 expression {
-                    return (ENV_NAME != TEST_BRANCH) || (ENV_NAME == TEST_BRANCH && env.QG_STATUS == 'OK')
+                   
+                    return (BRANCH_NAME != TEST_BRANCH) || (currentBuild.result == null || currentBuild.result == 'SUCCESS')
                 }
             }
             steps {
@@ -51,19 +45,19 @@ pipeline {
                                 cd /var/www/html/${ENV_NAME}/${PROJECT}
                                 git pull origin ${ENV_NAME}
 
-                               case "${PROJECT}" in
-                            "vue"|"next")
-                                npm run build
-                                if [ "${PROJECT}" = "next" ]; then
-                                    pm2 restart "${PROJECT}-${ENV_NAME}" 
-                                    pm2 save
-                                fi
-                                ;;
-                            "laravel")
-                                php artisan optimize
-                                ;;
-                        esac
-                    '
+                                case "${PROJECT}" in
+                                    "vue"|"next")
+                                        npm run build
+                                        if [ "${PROJECT}" = "next" ]; then
+                                            pm2 restart "${PROJECT}-${ENV_NAME}" 
+                                            pm2 save
+                                        fi
+                                        ;;
+                                    "laravel")
+                                        php artisan optimize
+                                        ;;
+                                esac
+                            '
                         """
                     }
                 }
