@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -28,13 +29,15 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
-            when {
-                beforeAgent true
-                expression {
-                    return (BRANCH_NAME != TEST_BRANCH) || (currentBuild.result == null || currentBuild.result == 'SUCCESS')
-                }
+       stage('Deploy') {
+    when {
+        expression {
+            if (env.BRANCH_NAME == env.TEST_BRANCH) {
+                return currentBuild.result == null || currentBuild.result == 'SUCCESS'
             }
+            return true
+        }
+    }
             steps {
                 script {
                     sshagent(['jenkins-deploy-key']) {
