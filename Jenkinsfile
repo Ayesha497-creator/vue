@@ -8,7 +8,6 @@ pipeline {
         ENV_NAME    = "${BRANCH_NAME}"         
         TEST_BRANCH = "test" 
         SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
-        QG_STATUS   = "NONE"
     }
 
     stages {
@@ -16,20 +15,13 @@ pipeline {
             when { branch "${TEST_BRANCH}" }
             steps {
                 script {
-                    echo "QA Scan starting for ${TEST_BRANCH}..."
                     withSonarQubeEnv('SonarQube-Server') {
-                        sh """
-                            ${tool 'sonar-scanner'}/bin/sonar-scanner \
-                                -Dsonar.projectKey=${PROJECT}-project \
-                                -Dsonar.sources=. \
-                                -Dsonar.exclusions=**/node_modules/**,**/vendor/**
-                        """
+                        sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
                     }
                     timeout(time: 10, unit: 'MINUTES') {
                         def qg = waitForQualityGate()
-                        env.QG_STATUS = qg.status
-                        if (env.QG_STATUS != 'OK') {
-                            error "STOPPING: QA Status is ${env.QG_STATUS}"
+                        if (qg.status != 'OK') {
+                            error "QUALITY_GATE_FAILED" 
                         }
                     }
                 }
@@ -38,8 +30,9 @@ pipeline {
 
         stage('Deploy') {
             when {
+                beforeAgent true
                 expression {
-                    return (ENV_NAME != TEST_BRANCH) || (ENV_NAME == TEST_BRANCH && env.QG_STATUS == 'OK')
+                    return (BRANCH_NAME != TEST_BRANCH) || (currentBuild.result == null || currentBuild.result == 'SUCCESS')
                 }
             }
             steps {
@@ -51,16 +44,18 @@ pipeline {
                                 cd /var/www/html/${ENV_NAME}/${PROJECT}
                                 git pull origin ${ENV_NAME}
 
-                                if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                    npm run build
-                                    # Yahan humne PROCESS_NAME hata diya, direct project name use ho raha hai
-                                    pm2 restart "${PROJECT}-${ENV_NAME}" || pm2 start npm --name "${PROJECT}-${ENV_NAME}" -- start
-                                    pm2 save
-                                fi
-
-                                if [ "${PROJECT}" = "laravel" ]; then
-                                    php artisan optimize
-                                fi
+                                case "${PROJECT}" in
+                                    "vue"|"next")
+                                        npm run build
+                                        if [ "${PROJECT}" = "next" ]; then
+                                            pm2 restart "${PROJECT}-${ENV_NAME}" 
+                                            pm2 save
+                                        fi
+                                        ;;
+                                    "laravel")
+                                        php artisan optimize
+                                        ;;
+                                esac
                             '
                         """
                     }
@@ -71,10 +66,20 @@ pipeline {
 
     post {
         failure {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}): Failed!\"}' ${SLACK_WEBHOOK}"
+            script {
+                // Yahan logic check karega ke failure kahan hua
+                def failureType = "Deployment Stage"
+                
+                // Agar test branch thi aur build abort hui QA stage par
+                if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.rawBuild.getLog(100).contains("QUALITY_GATE_FAILED")) {
+                    failureType = "Quality Check (QA)"
+                }
+
+                sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}) - *${failureType} Failed!*\"}' ${SLACK_WEBHOOK}"
+            }
         }
         success {
-            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}): Success!\"}' $SLACK_WEBHOOK"
+            sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"✅ *${PROJECT}* (${ENV_NAME}) - Deployed Successfully!\"}' $SLACK_WEBHOOK"
         }
     }
 }
