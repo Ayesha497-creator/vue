@@ -11,20 +11,17 @@ pipeline {
     }
 
     stages {
-        stage('Quality Check ') {
+        stage('Quality Check') {
             when { branch "${TEST_BRANCH}" }
             steps {
                 script {
-                   
-                    catchError(buildResult: 'FAILURE', stageResult: 'FAILURE') {
-                        withSonarQubeEnv('SonarQube-Server') {
-                            sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
-                        }
-                        timeout(time: 10, unit: 'MINUTES') {
-                            def qg = waitForQualityGate()
-                            if (qg.status != 'OK') {
-                                error "QUALITY_GATE_FAILED" 
-                            }
+                    withSonarQubeEnv('SonarQube-Server') {
+                        sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
+                    }
+                    timeout(time: 10, unit: 'MINUTES') {
+                        def qg = waitForQualityGate()
+                        if (qg.status != 'OK') {
+                            error "QUALITY_GATE_FAILED" 
                         }
                     }
                 }
@@ -32,15 +29,6 @@ pipeline {
         }
 
         stage('Deploy') {
-            when {
-                expression {
-                   
-                    if (env.BRANCH_NAME == env.TEST_BRANCH) {
-                        return currentBuild.result == 'SUCCESS' 
-                    }
-                    return true
-                }
-            }
             steps {
                 script {
                     sshagent(['jenkins-deploy-key']) {
@@ -73,12 +61,11 @@ pipeline {
     post {
         failure {
             script {
-                
                 def failureType = "Deployment Stage"
                 
-                
-                if (env.BRANCH_NAME == env.TEST_BRANCH && currentBuild.result == 'FAILURE') {
-                     failureType = "Quality Check "
+                // Agar test branch thi aur fail hui, to zahir hai quality check hi fail hua hoga
+                if (env.BRANCH_NAME == env.TEST_BRANCH) {
+                     failureType = "Quality Check"
                 }
 
                 sh "curl -X POST -H 'Content-type: application/json' --data '{\"text\":\"❌ *${PROJECT}* (${ENV_NAME}) - *${failureType} Failed!*\"}' ${SLACK_WEBHOOK}"
