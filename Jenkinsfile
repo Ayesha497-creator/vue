@@ -11,11 +11,10 @@ pipeline {
     }
 
     stages {
-        stage('Quality Gatekeeper') {
+        stage('Quality check') {
             steps {
                 script {
                     env.FAILURE_MSG = "Quality Gatekeeper"
-                    
                     sh "git checkout -f ${TEST_BRANCH} && git pull origin ${TEST_BRANCH}"
                     
                     withSonarQubeEnv('SonarQube-Server') {
