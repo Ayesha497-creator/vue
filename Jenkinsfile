@@ -51,17 +51,19 @@ pipeline {
                                 cd /var/www/html/${ENV_NAME}/${PROJECT}
                                 git pull origin ${ENV_NAME}
 
-                                if [ "${PROJECT}" = "vue" ] || [ "${PROJECT}" = "next" ]; then
-                                    npm run build
-                                    # Yahan humne PROCESS_NAME hata diya, direct project name use ho raha hai
-                                    pm2 restart "${PROJECT}-${ENV_NAME}" || pm2 start npm --name "${PROJECT}-${ENV_NAME}" -- start
+                               case "${PROJECT}" in
+                            "vue"|"next")
+                                npm run build
+                                if [ "${PROJECT}" = "next" ]; then
+                                    pm2 restart "${PROJECT}-${ENV_NAME}" 
                                     pm2 save
                                 fi
-
-                                if [ "${PROJECT}" = "laravel" ]; then
-                                    php artisan optimize
-                                fi
-                            '
+                                ;;
+                            "laravel")
+                                php artisan optimize
+                                ;;
+                        esac
+                    '
                         """
                     }
                 }
