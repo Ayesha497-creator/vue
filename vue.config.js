@@ -1,3 +1,3 @@
 module.exports = {
-  publicPath: process.env.VUE_APP_BASE_URL || '/development/vue/'
+  publicPath: process.env.VUE_APP_BASE_URL || '/'
 }
