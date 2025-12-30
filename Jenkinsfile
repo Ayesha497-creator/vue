@@ -41,6 +41,7 @@ pipeline {
 
                                 case "${PROJECT}" in
                                     "vue"|"next")
+                                    npm install
                                         npm run build
                                         if [ "${PROJECT}" = "next" ]; then
                                             pm2 restart "${PROJECT}-${ENV_NAME}" 
