@@ -3,7 +3,7 @@ pipeline {
 
     environment {
         REMOTE_USER = "ubuntu"
-        REMOTE_HOST = "13.61.68.173"
+        REMOTE_HOST = "13.62.178.120"
         PROJECT     = "vue" 
         ENV_NAME    = "${BRANCH_NAME}"         
         TEST_BRANCH = "test" 
@@ -33,6 +33,7 @@ pipeline {
                 script {
                     sshagent(['jenkins-deploy-key']) {
                         sh """
+                        ssh-keyscan -H ${REMOTE_HOST} >> ~/.ssh/known_hosts
                             ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                                 set -e
                                 cd /var/www/html/${ENV_NAME}/${PROJECT}
@@ -63,7 +64,6 @@ pipeline {
             script {
                 def failureType = "Deployment Stage"
                 
-                // Agar test branch thi aur fail hui, to zahir hai quality check hi fail hua hoga
                 if (env.BRANCH_NAME == env.TEST_BRANCH) {
                      failureType = "Quality Check"
                 }
