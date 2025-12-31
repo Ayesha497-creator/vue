@@ -1,4 +1,5 @@
 FROM node:18-alpine as build
+
 WORKDIR /var/www/html
 COPY . .
 RUN npm install && npm run build
