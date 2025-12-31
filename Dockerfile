@@ -1,9 +1,8 @@
 FROM node:18-alpine as build
-WORKDIR /app
+WORKDIR /var/www/html
 COPY . .
 RUN npm install && npm run build
 
 FROM nginx:stable-alpine
-COPY --from=build /app/dist /usr/share/nginx/html
+COPY --from=build /var/www/html/dist /usr/share/nginx/html
 EXPOSE 80
-CMD ["nginx", "-g", "daemon off;"]
