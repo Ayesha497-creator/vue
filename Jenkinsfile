@@ -37,8 +37,7 @@ pipeline {
                         ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
                             set -e
                             cd /var/www/html/${ENV_NAME}/${PROJECT}
-                            git fetch --all
-                    git reset --hard origin/${ENV_NAME}
+                          
                             git pull origin ${ENV_NAME}
 
                             docker network create my_app_net || true
