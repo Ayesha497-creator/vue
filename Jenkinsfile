@@ -1,3 +1,4 @@
+
 pipeline {
     agent any
 
@@ -28,30 +29,27 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Docker Deploy') {
             steps {
                 script {
                     sshagent(['jenkins-deploy-key']) {
                         sh """
-                        ssh-keyscan -H ${REMOTE_HOST} >> ~/.ssh/known_hosts
-                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                                set -e
-                                cd /var/www/html/${ENV_NAME}/${PROJECT}
-                                git pull origin ${ENV_NAME}
+                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                            set -e
+                            cd /var/www/html/${ENV_NAME}/${PROJECT}
+                            git fetch --all
+                    git reset --hard origin/${ENV_NAME}
+                            git pull origin ${ENV_NAME}
 
-                                case "${PROJECT}" in
-                                    "vue"|"next")
-                                        npm run build
-                                        if [ "${PROJECT}" = "next" ]; then
-                                            pm2 restart "${PROJECT}-${ENV_NAME}" 
-                                            pm2 save
-                                        fi
-                                        ;;
-                                    "laravel")
-                                        php artisan optimize
-                                        ;;
-                                esac
-                            '
+                            docker network create my_app_net || true
+                            docker build -t ${PROJECT}:${ENV_NAME} .
+
+                            docker stop ${PROJECT}-${ENV_NAME} || true
+                            docker rm ${PROJECT}-${ENV_NAME} || true
+                            docker run -d --name ${PROJECT}-${ENV_NAME} --network my_app_net ${PROJECT}:${ENV_NAME}
+                            
+                            docker image prune -f
+                        '
                         """
                     }
                 }
