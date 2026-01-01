@@ -1,4 +1,5 @@
 
+
 pipeline {
     agent any
 
@@ -29,26 +30,29 @@ pipeline {
             }
         }
 
-        stage('Docker Deploy') {
+        stage('Deploy') {
             steps {
                 script {
                     sshagent(['jenkins-deploy-key']) {
                         sh """
-                        ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
-                            set -e
-                            cd /var/www/html/${ENV_NAME}/${PROJECT}
-                          
-                            git pull origin ${ENV_NAME}
+                            ssh -o StrictHostKeyChecking=no ${REMOTE_USER}@${REMOTE_HOST} '
+                                set -e
+                                cd /var/www/html/${ENV_NAME}/${PROJECT}
+                                git pull origin ${ENV_NAME}
 
-                            docker network create my_app_net || true
-                            docker build -t ${PROJECT}:${ENV_NAME} .
-
-                            docker stop ${PROJECT}-${ENV_NAME} || true
-                            docker rm ${PROJECT}-${ENV_NAME} || true
-                            docker run -d --name ${PROJECT}-${ENV_NAME} --network my_app_net ${PROJECT}:${ENV_NAME}
-                            
-                            docker image prune -f
-                        '
+                                case "${PROJECT}" in
+                                    "vue"|"next")
+                                        npm run build
+                                        if [ "${PROJECT}" = "next" ]; then
+                                            pm2 restart "${PROJECT}-${ENV_NAME}" 
+                                            pm2 save
+                                        fi
+                                        ;;
+                                    "laravel")
+                                        php artisan optimize
+                                        ;;
+                                esac
+                            '
                         """
                     }
                 }
