@@ -30,35 +30,7 @@ pipeline {
             }
         }
 
-      pipeline {
-    agent any
-
-    environment {
-        REMOTE_USER = "ubuntu"
-        REMOTE_HOST = "13.62.178.120"
-        PROJECT     = "vue" 
-        ENV_NAME    = "${BRANCH_NAME}"         
-        TEST_BRANCH = "test" 
-        SLACK_WEBHOOK = credentials('SLACK_WEBHOOK')
-    }
-
-    stages {
-        stage('Quality Check') {
-            when { branch "${TEST_BRANCH}" }
-            steps {
-                script {
-                    withSonarQubeEnv('SonarQube-Server') {
-                        sh "${tool 'sonar-scanner'}/bin/sonar-scanner -Dsonar.projectKey=${PROJECT}-project -Dsonar.sources=. -Dsonar.exclusions=**/node_modules/**,**/vendor/**"
-                    }
-                    timeout(time: 10, unit: 'MINUTES') {
-                        def qg = waitForQualityGate()
-                        if (qg.status != 'OK') {
-                            error "QUALITY_GATE_FAILED" 
-                        }
-                    }
-                }
-            }
-        }
+  
 
         stage('Deploy') {
             steps {
