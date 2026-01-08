@@ -121,7 +121,7 @@ export default {
       techStack: ["Laravel", "Node.js", "Go"],
       description: "Powerful API development and database management for high-traffic applications.",
       status: "Ultra Scalable"
-    }
+    },
     { 
       id: 7,
       name: "E-Commerce Solutions", 
