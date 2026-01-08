@@ -23,9 +23,10 @@
         <p>{{ software.description }}</p>
       </div>
     </div>
+
     <ZoneTweet />
-    <Tweet v-for="n in 25" :key="n" />
-  </div>
+    <Tweet v-for="n in 25" :key="'tweet-' + n" />
+  </div> 
 </template>
 
 <script>
@@ -41,96 +42,16 @@ export default {
   data() {
     return {
       softwareList: [
-        { 
-          id: 1,
-          name: "Frontend Mastery", 
-          icon: "✨",
-          color: "#42b883",
-          techStack: ["Vue.js", "React", "Tailwind"],
-          description: "Crafting pixel-perfect, responsive interfaces that users love to interact with.",
-          status: "High Performance"
-        },
-        { 
-          id: 2,
-          name: "AI & Neural Labs", 
-          icon: "🧠",
-          color: "#3776ab",
-          techStack: ["Python", "PyTorch", "OpenAI"],
-          description: "Implementing deep learning models and automated intelligence for complex problem solving.",
-          status: "Cutting Edge"
-        },
-        { 
-          id: 3,
-          name: "Mobile Innovations", 
-          icon: "🚀",
-          color: "#02559B",
-          techStack: ["Flutter", "React Native", "Swift"],
-          description: "High-speed native and cross-platform mobile apps with seamless animations.",
-          status: "Multi-Platform"
-        },
-        { 
-          id: 4,
-          name: "Cloud & DevOps", 
-          icon: "☁️",
-          color: "#FF9900",
-          techStack: ["Docker", "Jenkins", "AWS"],
-          description: "Automating deployments and scaling infrastructure with 99.9% uptime guarantee.",
-          status: "Rock Solid"
-        },
-        { 
-          id: 5,
-          name: "Cyber Security", 
-          icon: "🛡️",
-          color: "#E34F26",
-          techStack: ["Kali", "OAuth", "PenTesting"],
-          description: "Protecting data integrity and ensuring secure communication across all digital assets.",
-          status: "Highly Secure"
-        },
-        { 
-          id: 6,
-          name: "Backend Engines", 
-          icon: "⚙️",
-          color: "#8892BF",
-          techStack: ["Laravel", "Node.js", "Go"],
-          description: "Powerful API development and database management for high-traffic applications.",
-          status: "Ultra Scalable"
-        },
-        { 
-          id: 7,
-          name: "E-Commerce Solutions", 
-          icon: "🛒",
-          color: "#9b59b6",
-          techStack: ["Shopify", "WooCommerce", "Stripe"],
-          description: "Building seamless shopping experiences with secure payment gateways and inventory tracking.",
-          status: "Sales Optimized"
-        },
-        { 
-          id: 8,
-          name: "Database Architect", 
-          icon: "🗄️",
-          color: "#00758f",
-          techStack: ["PostgreSQL", "MongoDB", "Redis"],
-          description: "Designing high-availability data structures and optimized query indexing for speed.",
-          status: "Data Driven"
-        },
-        { 
-          id: 9,
-          name: "UI/UX Design Lab", 
-          icon: "🎨",
-          color: "#f24e1e",
-          techStack: ["Figma", "Adobe XD", "Protopie"],
-          description: "Creating user-centric wireframes and interactive prototypes that bridge beauty and function.",
-          status: "User Centric"
-        },
-        { 
-          id: 10,
-          name: "Blockchain Systems", 
-          icon: "⛓️",
-          color: "#34495e",
-          techStack: ["Solidity", "Web3.js", "Smart Contracts"],
-          description: "Developing decentralized applications and secure ledger systems for the digital economy.",
-          status: "Decentralized"
-        }
+        { id: 1, name: "Frontend Mastery", icon: "✨", color: "#42b883", description: "Crafting pixel-perfect interfaces." },
+        { id: 2, name: "AI & Neural Labs", icon: "🧠", color: "#3776ab", description: "Deep learning models." },
+        { id: 3, name: "Mobile Innovations", icon: "🚀", color: "#02559B", description: "High-speed mobile apps." },
+        { id: 4, name: "Cloud & DevOps", icon: "☁️", color: "#FF9900", description: "Automating deployments." },
+        { id: 5, name: "Cyber Security", icon: "🛡️", color: "#E34F26", description: "Protecting data integrity." },
+        { id: 6, name: "Backend Engines", icon: "⚙️", color: "#8892BF", description: "Powerful API development." },
+        { id: 7, name: "E-Commerce Solutions", icon: "🛒", color: "#9b59b6", description: "Seamless shopping." },
+        { id: 8, name: "Database Architect", icon: "🗄️", color: "#00758f", description: "Optimized indexing." },
+        { id: 9, name: "UI/UX Design Lab", icon: "🎨", color: "#f24e1e", description: "Interactive prototypes." },
+        { id: 10, name: "Blockchain Systems", icon: "⛓️", color: "#34495e", description: "Decentralized apps." }
       ]
     };
   }
@@ -145,27 +66,14 @@ export default {
     display: flex;
     justify-content: space-between;
     padding: 1rem;
-    h3 {
-      font-weight: 900;
-      font-size: 23px;
-      color: #1d9bf0;
-      cursor: pointer;
-    }
-    img {
-      cursor: pointer;
-    }
+    h3 { font-weight: 900; font-size: 23px; color: #1d9bf0; cursor: pointer; }
+    img { cursor: pointer; }
   }
 
   .greeting {
     padding: 1rem;
     text-align: center;
-    h2 {
-      font-weight: 900;
-      font-size: 32px;
-      color: #ff6b9d;
-      margin: 0;
-      text-transform: lowercase;
-    }
+    h2 { font-weight: 900; font-size: 32px; color: #ff6b9d; margin: 0; text-transform: lowercase; }
   }
 
   .notice-card {
@@ -173,20 +81,10 @@ export default {
     padding: 0.85rem 1rem;
     border-radius: 12px;
     background: linear-gradient(135deg, #ff6b9d, #c44569, #f8b500);
-    border: 2px solid rgba(255, 107, 157, 0.5);
     box-shadow: 0 6px 18px rgba(255, 107, 157, 0.3);
-    .headline {
-      font-weight: 800;
-      font-size: 16px;
-      color: #ffffff;
-      margin-bottom: 0.2rem;
-    }
-    .body {
-      font-size: 14px;
-      color: #fff8e1;
-      line-height: 1.4;
-      margin: 0;
-    }
+    color: white;
+    .headline { font-weight: 800; margin-bottom: 0.2rem; }
+    .body { font-size: 14px; line-height: 1.4; margin: 0; }
   }
 
   .software-grid {
@@ -199,4 +97,13 @@ export default {
       background: linear-gradient(135deg, #89f7fe, #66a6ff);
       padding: 1rem;
       border-radius: 12px;
-      box-shadow:
+      color: #fff;
+      transition: transform 0.3s ease;
+
+      h4 { margin: 0 0 0.5rem 0; font-size: 18px; font-weight: 900; }
+      p { margin: 0; font-size: 14px; }
+      &:hover { transform: translateY(-5px); }
+    }
+  }
+}
+</style>
