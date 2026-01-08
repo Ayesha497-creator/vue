@@ -44,11 +44,10 @@ pipeline {
                                 git pull origin ${ENV_NAME}
 
                                 cd /var/www/html
-                                
                                 SERVICE_NAME=\$(echo "${PROJECT}" | sed "s/project//" | tr "[:upper:]" "[:lower:]")
+                                FINAL_SERVICE="\${SERVICE_NAME}-\${ENV_MAP}"
                                 
-                                 docker-compose up -d --build \${SERVICE_NAME}-${ENV_NAME}
-                                
+                                docker-compose up -d --build \$FINAL_SERVICE                                
                                 docker image prune -f
                             '
                         """
