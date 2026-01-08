@@ -47,7 +47,7 @@ pipeline {
                                 
                                 SERVICE_NAME=\$(echo "${PROJECT}" | sed "s/project//" | tr "[:upper:]" "[:lower:]")
                                 
-                                docker compose up -d --build \${SERVICE_NAME}-${ENV_NAME}
+                                 docker-compose up -d --build \${SERVICE_NAME}-${ENV_NAME}
                                 
                                 docker image prune -f
                             '
