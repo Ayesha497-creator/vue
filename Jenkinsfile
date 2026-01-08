@@ -43,8 +43,8 @@ pipeline {
                                 cd /var/www/html/${ENV_NAME}/${PROJECT}
                                 git pull origin ${ENV_NAME}
                                 cd /var/www/html
-                                docker-compose up -d --build ${PROJECT}-${ENV_NAME}
-                        
+                                SERVICE_NAME="${PROJECT}-${ENV_NAME}"
+                                docker-compose up -d --build \$SERVICE_NAME
                                 docker image prune -f
                             '
                         """
