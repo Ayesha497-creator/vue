@@ -66,19 +66,99 @@ export default {
     Tweet,
   },
   data() {
-    return {
-      softwareList: [
-        { name: "🌐 Web Development", description: "Vue, React, Angular - Build stunning web apps." },
-        { name: "🤖 AI & Machine Learning", description: "Python, TensorFlow, PyTorch - Create intelligent systems." },
-        { name: "📱 Mobile Apps", description: "React Native, Flutter - Build cross-platform mobile apps." },
-        { name: "⚡ Productivity Tools", description: "VS Code, Git, GitHub - Enhance your workflow." },
-         { name: "🌐 Web Development", description: "Vue, React, Angular - Build stunning web apps." },
-        { name: "🤖 AI & Machine Learning", description: "Python, TensorFlow, PyTorch - Create intelligent systems." },
-        { name: "📱 Mobile Apps", description: "React Native, Flutter - Build cross-platform mobile apps." },
-        { name: "⚡ Productivity Tools", description: "VS Code, Git, GitHub - Enhance your workflow." },
-      ],
-    };
-  },
+   return {
+  softwareList: [
+    { 
+      id: 1,
+      name: "Frontend Mastery", 
+      icon: "✨",
+      color: "#42b883", // Vue Green
+      techStack: ["Vue.js", "React", "Tailwind"],
+      description: "Crafting pixel-perfect, responsive interfaces that users love to interact with.",
+      status: "High Performance"
+    },
+    { 
+      id: 2,
+      name: "AI & Neural Labs", 
+      icon: "🧠",
+      color: "#3776ab", // Python Blue
+      techStack: ["Python", "PyTorch", "OpenAI"],
+      description: "Implementing deep learning models and automated intelligence for complex problem solving.",
+      status: "Cutting Edge"
+    },
+    { 
+      id: 3,
+      name: "Mobile Innovations", 
+      icon: "🚀",
+      color: "#02559B", // Flutter Blue
+      techStack: ["Flutter", "React Native", "Swift"],
+      description: "High-speed native and cross-platform mobile apps with seamless animations.",
+      status: "Multi-Platform"
+    },
+    { 
+      id: 4,
+      name: "Cloud & DevOps", 
+      icon: "☁️",
+      color: "#FF9900", // AWS Orange
+      techStack: ["Docker", "Jenkins", "AWS"],
+      description: "Automating deployments and scaling infrastructure with 99.9% uptime guarantee.",
+      status: "Rock Solid"
+    },
+    { 
+      id: 5,
+      name: "Cyber Security", 
+      icon: "🛡️",
+      color: "#E34F26", // Security Red
+      techStack: ["Kali", "OAuth", "PenTesting"],
+      description: "Protecting data integrity and ensuring secure communication across all digital assets.",
+      status: "Highly Secure"
+    },
+    { 
+      id: 6,
+      name: "Backend Engines", 
+      icon: "⚙️",
+      color: "#8892BF", // PHP/Laravel Purple
+      techStack: ["Laravel", "Node.js", "Go"],
+      description: "Powerful API development and database management for high-traffic applications.",
+      status: "Ultra Scalable"
+    }
+    { 
+      id: 7,
+      name: "E-Commerce Solutions", 
+      icon: "🛒",
+      color: "#9b59b6", // Amethyst Purple
+      techStack: ["Shopify", "WooCommerce", "Stripe"],
+      description: "Building seamless shopping experiences with secure payment gateways and inventory tracking.",
+      status: "Sales Optimized"
+    },
+    { 
+      id: 8,
+      name: "Database Architect", 
+      icon: "🗄️",
+      color: "#00758f", // MySQL Blue
+      techStack: ["PostgreSQL", "MongoDB", "Redis"],
+      description: "Designing high-availability data structures and optimized query indexing for speed.",
+      status: "Data Driven"
+    },
+    { 
+      id: 9,
+      name: "UI/UX Design Lab", 
+      icon: "🎨",
+      color: "#f24e1e", // Figma Orange
+      techStack: ["Figma", "Adobe XD", "Protopie"],
+      description: "Creating user-centric wireframes and interactive prototypes that bridge beauty and function.",
+      status: "User Centric"
+    },
+    { 
+      id: 10,
+      name: "Blockchain Systems", 
+      icon: "⛓️",
+      color: "#34495e", // Ethereum Gray
+      techStack: ["Solidity", "Web3.js", "Smart Contracts"],
+      description: "Developing decentralized applications and secure ledger systems for the digital economy.",
+      status: "Decentralized"
+    }
+  ],
 };
 </script>
 
